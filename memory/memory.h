@@ -13,13 +13,13 @@
  *
  * General function used to test memory regions
  * */
-enum memory_test_flags : u32 {
-    memory_test_const8_fill       = 0x01,
-    memory_test_incrementing_fill = 0x02,
-    memory_test_const32_fill      = 0x04,
-    memory_test_dma16             = 0x08,
-    memory_test_dma32             = 0x10,
-    memory_test_endianness        = 0x20,
+enum ewram_test_flags : u32 {
+    ewram_test_const8_fill       = 0x01,
+    ewram_test_incrementing_fill = 0x02,
+    ewram_test_const32_fill      = 0x04,
+    ewram_test_dma16             = 0x08,
+    ewram_test_dma32             = 0x10,
+    ewram_test_endianness        = 0x20,
 };
 
 u32 eWRAM_test(u32* buffer);

@@ -204,29 +204,29 @@ u32 eWRAM_test(u32* buffer) {
     u32 flags = 0;
 
     if (const8_fill_test(EWRAM_START, EWRAM_START + EWRAM_LENGTH, 0x55, &buffer[0], &buffer[1])) {
-        flags |= memory_test_const8_fill;
+        flags |= ewram_test_const8_fill;
     }
 
     if (set_incrementing_test(EWRAM_START, EWRAM_START + EWRAM_LENGTH, &buffer[2], &buffer[3])) {
-        flags |= memory_test_incrementing_fill;
+        flags |= ewram_test_incrementing_fill;
     }
 
     if (const32_fill_test(EWRAM_START, EWRAM_START + EWRAM_LENGTH, 0x55, &buffer[4], &buffer[5])) {
-        flags |= memory_test_const32_fill;
+        flags |= ewram_test_const32_fill;
     }
 
     if (DMA16_test(EWRAM_START, 2)) {
-        flags |= memory_test_dma16;
+        flags |= ewram_test_dma16;
     }
 
     if (DMA32_test(EWRAM_START, 2, 0x10)) {
-        flags |= memory_test_dma32;
+        flags |= ewram_test_dma32;
     }
 
     *EWRAM_START = 1;
     *(EWRAM_START + 1) = 0x23;
     if (*(u16*)EWRAM_START != 0x2301) {
-        flags |= memory_test_endianness;
+        flags |= ewram_test_endianness;
     }
 
     return flags;
