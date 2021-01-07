@@ -13,6 +13,8 @@
 #define PRAM_LENGTH 0x400
 #define VRAM_START ((u8*)0x06000000)
 #define VRAM_LENGTH 0x18000
+#define OAM_START ((u8*)0x07000000)
+#define OAM_LENGTH 0x400
 
 enum memory_test_flags : u32 {
     memory_test_const8_fill       = 0x01,
@@ -74,13 +76,6 @@ u32 PRAM_test(u32* buffer);
  * */
 u32 VRAM_test_1(u32* buffer);
 
-/*
- * function at 080027cc
- * return at 08002a8a
- *
- * More tests for VRAM.
- * */
-
 // at 080190d8
 static const s_affine_settings VRAM_test_2_BG2_settings = {
     .CenterX  = 0x7800,
@@ -92,7 +87,21 @@ static const s_affine_settings VRAM_test_2_BG2_settings = {
     .Angle    = 0xe000,
 };
 
+/*
+ * function at 080027cc
+ * return at 08002a8a
+ *
+ * More tests for VRAM.
+ * */
 u32 VRAM_test_2(u32* buffer);
+
+/*
+ * function at 08002aec
+ * return at 08002c6e
+ *
+ * OAM tests. Basically the same as PRAM tests.
+ * */
+u32 OAM_test(u32* buffer);
 
 /*
  * function at 0800ce6c
@@ -216,5 +225,11 @@ u32 palette_ram();
  * return at 08002ab2
  * */
 u32 vram();
+
+/*
+ * test at 08002c70
+ * return at 08002c8a
+ * */
+u32 oam();
 
 #endif //AGS_MEMORY_H

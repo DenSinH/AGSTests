@@ -284,3 +284,54 @@ u32 VRAM_test_2(u32* buffer) {
     set_IME(IME);
     return flags;
 }
+
+u32 oam() {
+    u32 buffer[8];
+    return OAM_test(buffer);
+}
+
+u32 OAM_test(u32* buffer) {
+    u32 flags = 0;
+
+    u16 IME = set_IME(0);
+    u16 DISPCNT = *ptr_DISPCNT;
+    *ptr_DISPCNT = 0x80;  // Forced Blank
+
+    // first DMA all of OAM to eWRAM to not destroy data
+    *ptr_DMA3CNT = 0;
+    *ptr_DMA3SAD = OAM_START;
+    *ptr_DMA3DAD = EWRAM_START;
+    *ptr_DMA3CNT = ((DMAEnable | DMAWordSized) << 16) | (OAM_LENGTH >> 2);
+    do { } while ((*ptr_DMA3CNT) & 0x80000000);
+
+    if (const32_fill_test(OAM_START, OAM_START + OAM_LENGTH, 0x55555555, &buffer[0], &buffer[1])) {
+        flags |= memory_test_const8_fill;
+    }
+
+    if (set_incrementing_test(OAM_START, OAM_START + OAM_LENGTH, &buffer[2], &buffer[3])) {
+        flags |= memory_test_incrementing_fill;
+    }
+
+    if (const32_fill_test(OAM_START, OAM_START + OAM_LENGTH, 0xaaaaaaaa, &buffer[4], &buffer[5])) {
+        flags |= memory_test_const32_fill;
+    }
+
+    if (DMA16_test(OAM_START, 0)) {
+        flags |= memory_test_dma16;
+    }
+
+    if (DMA32_test(OAM_START, 0, 0x20)) {
+        flags |= memory_test_dma32;
+    }
+
+    // restore OAM
+    *ptr_DMA3CNT = 0;
+    *ptr_DMA3SAD = EWRAM_START;
+    *ptr_DMA3DAD = OAM_START;
+    *ptr_DMA3CNT = ((DMAEnable | DMAWordSized) << 16) | (OAM_LENGTH >> 2);
+    do { } while ((*ptr_DMA3CNT) & 0x80000000);
+
+    *ptr_DISPCNT = DISPCNT;
+    set_IME(IME);
+    return flags;
+}
