@@ -1,4 +1,5 @@
 #include "./memory.h"
+#include <string.h>
 
 u32 cpu_external_work_ram() {
     u32 buffer[8];
@@ -92,11 +93,11 @@ void iWRAM_test_async() {
         flags |= memory_test_const32_fill;
     }
 
-    if (DMA16_test(IWRAM_START, 2)) {
+    if (DMA16_test(IWRAM_START, 0)) {
         flags |= memory_test_dma16;
     }
 
-    if (DMA32_test(EWRAM_START, 2, 0x10)) {
+    if (DMA32_test(IWRAM_START, 0, 0x10)) {
         flags |= memory_test_dma32;
     }
 
@@ -133,7 +134,7 @@ u32 PRAM_test(u32* buffer) {
     *ptr_DMA3CNT = ((DMAEnable | DMAWordSized) << 16) | (PRAM_LENGTH >> 2);
     do { } while ((*ptr_DMA3CNT) & 0x80000000);
 
-    if (const8_fill_test(PRAM_START, PRAM_START + PRAM_LENGTH, 0x55, &buffer[0], &buffer[1])) {
+    if (const32_fill_test(PRAM_START, PRAM_START + PRAM_LENGTH, 0x55555555, &buffer[0], &buffer[1])) {
         flags |= memory_test_const8_fill;
     }
 
@@ -145,11 +146,11 @@ u32 PRAM_test(u32* buffer) {
         flags |= memory_test_const32_fill;
     }
 
-    if (DMA16_test(PRAM_START, 2)) {
+    if (DMA16_test(PRAM_START, 0)) {
         flags |= memory_test_dma16;
     }
 
-    if (DMA32_test(PRAM_START, 2, 0x10)) {
+    if (DMA32_test(PRAM_START, 0, 0x10)) {
         flags |= memory_test_dma32;
     }
 
@@ -160,6 +161,125 @@ u32 PRAM_test(u32* buffer) {
     *ptr_DMA3CNT = ((DMAEnable | DMAWordSized) << 16) | (PRAM_LENGTH >> 2);
     do { } while ((*ptr_DMA3CNT) & 0x80000000);
 
+    *ptr_DISPCNT = DISPCNT;
+    set_IME(IME);
+    return flags;
+}
+
+u32 vram() {
+    u32 buffer[8];
+    return VRAM_test_1(buffer) | VRAM_test_2(buffer);
+}
+
+u32 VRAM_test_1(u32* buffer) {
+    u32 flags = 0;
+
+    u16 IME = set_IME(0);
+    u16 DISPCNT = *ptr_DISPCNT;
+    *ptr_DISPCNT = 0x80;  // Forced Blank
+
+    // first DMA all of VRAM to eWRAM to not destroy data
+    *ptr_DMA3CNT = 0;
+    *ptr_DMA3SAD = VRAM_START;
+    *ptr_DMA3DAD = EWRAM_START;
+    *ptr_DMA3CNT = ((DMAEnable | DMAWordSized) << 16) | (VRAM_LENGTH >> 2);
+    do { } while ((*ptr_DMA3CNT) & 0x80000000);
+
+    if (const32_fill_test(VRAM_START, VRAM_START + VRAM_LENGTH, 0x55555555, &buffer[0], &buffer[1])) {
+        flags |= memory_test_const8_fill;
+    }
+
+    if (set_incrementing_test(VRAM_START, VRAM_START + VRAM_LENGTH, &buffer[2], &buffer[3])) {
+        flags |= memory_test_incrementing_fill;
+    }
+
+    if (const32_fill_test(VRAM_START, VRAM_START + VRAM_LENGTH, 0xaaaaaaaa, &buffer[4], &buffer[5])) {
+        flags |= memory_test_const32_fill;
+    }
+
+    if (DMA16_test(VRAM_START, 0)) {
+        flags |= memory_test_dma16;
+    }
+
+    if (DMA32_test(VRAM_START, 0, 0x10)) {
+        flags |= memory_test_dma32;
+    }
+
+    // restore VRAM
+    *ptr_DMA3CNT = 0;
+    *ptr_DMA3SAD = EWRAM_START;
+    *ptr_DMA3DAD = VRAM_START;
+    *ptr_DMA3CNT = ((DMAEnable | DMAWordSized) << 16) | (VRAM_LENGTH >> 2);
+    do { } while ((*ptr_DMA3CNT) & 0x80000000);
+
+    *ptr_DISPCNT = DISPCNT;
+    set_IME(IME);
+    return flags;
+}
+
+u32 VRAM_test_2(u32* buffer) {
+    u32 flags = 0;
+
+    s_affine_settings settings;
+
+    // it's not actually memcpy'd, but essentially the same thing
+    memcpy(&settings, &VRAM_test_2_BG2_settings, sizeof(struct s_affine_settings));
+
+    u16 IME = set_IME(0);
+    u16 DISPCNT = *ptr_DISPCNT;
+    u16 BG2PA = *ptr_BG2PA;
+    u16 BG2PB = *ptr_BG2PB;
+    u16 BG2PC = *ptr_BG2PC;
+    u16 BG2PD = *ptr_BG2PD;
+    u32 BG2X  = *ptr_BG2X;
+    u32 BG2Y  = *ptr_BG2Y;
+    BGAffineSet(&settings, ptr_BG2PA, 1);
+    *ptr_DISPCNT = 0x0403;  // mode 3, display BG2
+
+    // first DMA all of VRAM to eWRAM to not destroy data
+    *ptr_DMA3CNT = 0;
+    *ptr_DMA3SAD = VRAM_START;
+    *ptr_DMA3DAD = EWRAM_START;
+    *ptr_DMA3CNT = ((DMAEnable | DMAWordSized) << 16) | (VRAM_LENGTH >> 2);
+    do { } while ((*ptr_DMA3CNT) & 0x80000000);
+
+    if (const32_fill_test(VRAM_START, VRAM_START + VRAM_LENGTH, 0x55555555, &buffer[0], &buffer[1])) {
+        flags |= 1;
+    }
+
+    if (set_incrementing_test(VRAM_START, VRAM_START + VRAM_LENGTH, &buffer[2], &buffer[3])) {
+        flags |= 2;
+    }
+
+    if (const32_fill_test(VRAM_START, VRAM_START + VRAM_LENGTH, 0xaaaaaaaa, &buffer[4], &buffer[5])) {
+        flags |= 4;
+    }
+
+    if (const32_fill_test(VRAM_START, VRAM_START + VRAM_LENGTH, 0, &buffer[6], &buffer[7])) {
+        flags |= 0x20;
+    }
+
+    if (const32_fill_test(VRAM_START, VRAM_START + VRAM_LENGTH, 0xffffffff, &buffer[6], &buffer[7])) {
+        flags |= 0x40;
+    }
+
+    if (mem_read_write_checksum(VRAM_START, VRAM_START + VRAM_LENGTH, 0x0a1b2c4d, &buffer[6], &buffer[7])) {
+        flags |= 0x10000000;
+    }
+
+    // restore VRAM
+    *ptr_DMA3CNT = 0;
+    *ptr_DMA3SAD = EWRAM_START;
+    *ptr_DMA3DAD = VRAM_START;
+    *ptr_DMA3CNT = ((DMAEnable | DMAWordSized) << 16) | (VRAM_LENGTH >> 2);
+    do { } while ((*ptr_DMA3CNT) & 0x80000000);
+
+    *ptr_BG2PA = BG2PA;
+    *ptr_BG2PB = BG2PB;
+    *ptr_BG2PC = BG2PC;
+    *ptr_BG2PD = BG2PD;
+    *ptr_BG2X  = BG2X;
+    *ptr_BG2Y  = BG2Y;
     *ptr_DISPCNT = DISPCNT;
     set_IME(IME);
     return flags;

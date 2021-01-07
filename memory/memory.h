@@ -11,6 +11,8 @@
 #define IWRAM_LENGTH 0x00007d00
 #define PRAM_START ((u8*)0x05000000)
 #define PRAM_LENGTH 0x400
+#define VRAM_START ((u8*)0x06000000)
+#define VRAM_LENGTH 0x18000
 
 enum memory_test_flags : u32 {
     memory_test_const8_fill       = 0x01,
@@ -60,8 +62,37 @@ void iWRAM_test_async();
  * return at 0800260a
  *
  * Actual tests for the Palette RAM region. Basically the same as the eWRAM tests.
+ * Note: PRAM 8 bit writes are messed up. The const8_fill test actually fills with words
  * */
 u32 PRAM_test(u32* buffer);
+
+/*
+ * function at 08002648
+ * return at 080027ca
+ *
+ * Actual tests for the VRAM region. Basically the same as the PRAM tests
+ * */
+u32 VRAM_test_1(u32* buffer);
+
+/*
+ * function at 080027cc
+ * return at 08002a8a
+ *
+ * More tests for VRAM.
+ * */
+
+// at 080190d8
+static const s_affine_settings VRAM_test_2_BG2_settings = {
+    .CenterX  = 0x7800,
+    .CenterY  = 0x5000,
+    .DisplayX = 0x0078,
+    .DisplayY = 0x0050,
+    .ScalingX = 0x0208,
+    .ScalingY = 0x0208,
+    .Angle    = 0xe000,
+};
+
+u32 VRAM_test_2(u32* buffer);
 
 /*
  * function at 0800ce6c
@@ -155,6 +186,14 @@ void mem_set_incrementing(u8* dest, u32 length);
 bool mem_set_incrementing_check(u8* src, u32 length, u8** failed_address, u32* failed_value);
 
 /*
+ * function at 0800d52c
+ * return at 0800d5f0
+ *
+ * General function used in VRAM_test_2. Fills region with "checksummed" values, then checks them again.
+ * */
+bool mem_read_write_checksum(u8* dest, const u8* dest_end, u32 start_val, u8** failed_address, u32* failed_value);
+
+/*
  * test at 80021D0
  * return at 080021ea
  * */
@@ -171,5 +210,11 @@ u32 cpu_internal_work_ram();
  * return at 08002626
  * */
 u32 palette_ram();
+
+/*
+ * test at 08002a8c
+ * return at 08002ab2
+ * */
+u32 vram();
 
 #endif //AGS_MEMORY_H

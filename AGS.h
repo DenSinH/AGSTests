@@ -14,6 +14,13 @@
 #define ptr_TM0CNT ((u32*)0x04000100)
 #define ptr_IF ((u16*)0x04000202)
 
+#define ptr_BG2PA ((u16*)0x4000020)
+#define ptr_BG2PB ((u16*)0x4000022)
+#define ptr_BG2PC ((u16*)0x4000024)
+#define ptr_BG2PD ((u16*)0x4000026)
+#define ptr_BG2X  ((u32*)0x4000028)
+#define ptr_BG2Y ((u32*)0x400002C)
+
 #define ptr_InterruptCheckFlag ((u32*)0x03007ff8)
 
 /*
@@ -113,5 +120,19 @@ extern u16 set_IME(u16 new_value);
  * Simply sets IE and returns the old value it was. (really nothing else)
  * */
 extern u16 set_IE(u16 new_value);
+
+typedef struct s_affine_settings {
+    i32 CenterX;
+    i32 CenterY;
+    i16 DisplayX;
+    i16 DisplayY;
+    i16 ScalingX;
+    i16 ScalingY;
+    u16 Angle;
+} s_affine_settings;
+/*
+ * Just the BGAffineSet SWI. At 08012150.
+ * */
+extern void BGAffineSet(s_affine_settings* settings, void* dest, u32 number_of_calculations);
 
 #endif //AGS_AGS_H

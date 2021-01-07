@@ -199,3 +199,29 @@ bool DMA32_test(u8* buffer, u32 access_time, u32 access_time_factor) {
     set_IME(IME);
     return failed;
 }
+
+bool mem_read_write_checksum(u8* dest, const u8* dest_end, u32 start_val, u8** failed_address, u32* failed_value) {
+    bool failed = false;
+    u16 IME = set_IME(0);
+    u32 value = start_val;
+    for (u32* _dest = (u32*)dest; _dest != (u32*)dest_end; _dest++) {
+        value = 0x10dcd * value + 0x19660;
+        *_dest = value;
+    }
+
+    u32 correct_value = start_val;
+    for (u32* _dest = (u32*)dest; _dest != (u32*)dest_end; _dest++) {
+        value = *_dest;
+        correct_value = 0x10dcd * correct_value + 0x19660;
+
+        if (value != correct_value) {
+            *failed_address = dest;
+            *failed_value = value;
+            failed = true;
+            break;
+        }
+    }
+
+    set_IME(IME);
+    return failed;
+}
