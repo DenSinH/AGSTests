@@ -6,12 +6,15 @@
 
 #define EWRAM_START ((u8*)0x02000000)
 #define EWRAM_LENGTH 0x00040000
+#define IWRAM_START ((u8*)0x03000000)
+// we don't want to touch the stack
+#define IWRAM_LENGTH 0x00007d00
 
 /*
  * function at 080020e8
  * return at 080021ce
  *
- * General function used to test memory regions
+ * Function used to test eWRAM memory region
  * */
 enum ewram_test_flags : u32 {
     ewram_test_const8_fill       = 0x01,
@@ -23,6 +26,40 @@ enum ewram_test_flags : u32 {
 };
 
 u32 eWRAM_test(u32* buffer);
+
+/*
+ * function at 0800220c
+ * return at 080022c6
+ *
+ * Function used to test iWRAM memory region. The tests are very similar to the eWRAM tests, except they all
+ * happen in VBlank now.
+ * */
+enum iwram_test_flags : u32 {
+    iwram_test_const8_fill       = 0x01,
+    iwram_test_incrementing_fill = 0x02,
+    iwram_test_const32_fill      = 0x04,
+    iwram_test_dma16             = 0x08,
+    iwram_test_dma32             = 0x10,
+    iwram_test_endianness        = 0x20,
+};
+u32 iWRAM_test(u32* buffer);
+
+/*
+ * function at 08002304
+ * return at 08002480
+ *
+ * Actual tests for the iWRAM region, these write the results to a global result struct that is then copied by the
+ * synchronous handler.
+ * */
+typedef struct s_iWRAM_test_results {
+    u32 flags;
+    u32 _;
+    u32 fail_data[6];  // same data as for the eWRAM test, pointers to bad data / bad data value
+} s_iWRAM_test_results;
+
+s_iWRAM_test_results* ptr_iWRAM_results = (s_iWRAM_test_results*)0x03001080;
+
+void iWRAM_test_async();
 
 /*
  * function at 0800ce6c
@@ -120,5 +157,11 @@ bool mem_set_incrementing_check(u8* src, u32 length, u8** failed_address, u32* f
  * return at 080021ea
  * */
 u32 cpu_external_work_ram();
+
+/*
+ * test at 080022c8
+ * return at 080022e2
+ * */
+u32 cpu_internal_work_ram();
 
 #endif //AGS_MEMORY_H
