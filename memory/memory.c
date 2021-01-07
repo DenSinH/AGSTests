@@ -62,7 +62,9 @@ test_failed:  // LAB_0800f240
     failed = true;
     src += i;
     goto return_statement;
-}void mem_set_incrementing(u8* dest, u32 length) {
+}
+
+void mem_set_incrementing(u8* dest, u32 length) {
     u32 value = 0;
     for (u32 i = 0; i < length; i += 2, value++) {
         *(u16*)(dest + i) = (value >> 16) + (u16)value;
@@ -224,25 +226,4 @@ bool mem_read_write_checksum(u8* dest, const u8* dest_end, u32 start_val, u8** f
 
     set_IME(IME);
     return failed;
-}
-
-u32 prefetch_buffer_test() {
-    // reset timer 0
-    *ptr_TM0CNT = 0;
-    *ptr_TM0CNT = 0x00800000;
-
-    // r4 = ptr_TM0CNT
-    __asm__(
-        "ldr r2,[r4,#0x0]\n"
-        "ldr r2,[r4,#0x0]\n"
-        "ldr r2,[r4,#0x0]\n"
-        "ldr r2,[r4,#0x0]\n"
-        "ldr r2,[r4,#0x0]\n"
-        "ldr r2,[r4,#0x0]\n"
-        "ldr r2,[r4,#0x0]\n"
-        "ldr r2,[r4,#0x0]"
-    );
-
-    // a halfword read with r0 right after:
-    return *ptr_TM0CNT;
 }

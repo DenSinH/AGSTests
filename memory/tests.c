@@ -341,6 +341,27 @@ u32 cartridge_type_flag() {
     return (*ptr_WAITCNT & 0x8000) != 0;
 }
 
+u32 prefetch_buffer_test() {
+    // reset timer 0
+    *ptr_TM0CNT = 0;
+    *ptr_TM0CNT = 0x00800000;
+
+    // r4 = ptr_TM0CNT
+    __asm__(
+    "ldr r2,[r4,#0x0]\n"
+    "ldr r2,[r4,#0x0]\n"
+    "ldr r2,[r4,#0x0]\n"
+    "ldr r2,[r4,#0x0]\n"
+    "ldr r2,[r4,#0x0]\n"
+    "ldr r2,[r4,#0x0]\n"
+    "ldr r2,[r4,#0x0]\n"
+    "ldr r2,[r4,#0x0]"
+    );
+
+    // a halfword read with r0 right after:
+    return *ptr_TM0CNT;
+}
+
 u32 prefetch_buffer() {
     u32 flags = 0;
 
@@ -364,6 +385,93 @@ u32 prefetch_buffer() {
     }
 
     *ptr_WAITCNT = WAITCNT;
+    set_IME(IME);
+    return flags;
+}
+
+u32 run_waitstate_wait_control_test(u32 waitstate, u32 setting) {
+    u16 WAITCNT = *ptr_WAITCNT;
+    *ptr_WAITCNT = WAITCNT & 0xf803 | (setting << (waitstate * 3 + 2));
+    *ptr_TM0CNT = 0;
+    *ptr_TM0CNT = 0x00800000;  // enable, reload
+
+    // r2 holds a pointer to 08000000 (ROM start)
+    // r3 is just a trash register
+    __asm__(
+        "ldr r3,[r2,#0x0]\n"
+        "ldr r3,[r2,#0x0]\n"
+        "ldr r3,[r2,#0x0]\n"
+        "ldr r3,[r2,#0x0]"
+    );
+
+    // ldrh r0, [r4, #0] (load TM0CNT_L)
+    u16 TM0CNT_L = *(u16*)ptr_TM0CNT;
+    *ptr_WAITCNT = WAITCNT;
+    return TM0CNT_L;
+}
+
+u32 waitstate_wait_control_test() {
+    u32 flags = 0;
+
+    u32 local_timer_values[3][8] = {};
+
+    memcpy32(local_timer_values, wait_control_timer_values, sizeof(local_timer_values));
+    u16 IME = set_IME(0);
+    u32 counter = 0;
+
+    u32 timer_value;
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 8; j++, counter++) {
+            timer_value = call_from_stack(run_waitstate_wait_control_test, i, j);
+            if (timer_value != local_timer_values[i][j]) {
+                flags |= 1 << counter;
+            }
+        }
+    }
+
+    set_IME(IME);
+    return flags;
+}
+
+u32 run_cart_wait_control_test(u32 setting, u32 _) {
+    u16 WAITCNT = *ptr_WAITCNT;
+    *ptr_WAITCNT = WAITCNT & 0xfffc | setting;
+    *ptr_TM0CNT = 0;
+    *ptr_TM0CNT = 0x00800000;  // enable, reload
+
+    // r2 holds a pointer to 0e000000 (SRAM start)
+    // r3 is just a trash register
+    __asm__(
+        "ldr r3,[r2,#0x0]\n"
+        "ldr r3,[r2,#0x0]\n"
+        "ldr r3,[r2,#0x0]\n"
+        "ldr r3,[r2,#0x0]"
+    );
+
+    // ldrh r0, [r4, #0] (load TM0CNT_L)
+    u16 TM0CNT_L = *(u16*)ptr_TM0CNT;
+    *ptr_WAITCNT = WAITCNT;
+    return TM0CNT_L;
+}
+
+u32 cartrige_ram_wait_control() {
+    u32 flags = 0;
+
+    u32 local_timer_values[4] = {};
+
+    local_timer_values[0] = cart_wait_control_timer_values[0];
+    local_timer_values[1] = cart_wait_control_timer_values[1];
+    local_timer_values[2] = cart_wait_control_timer_values[2];
+    local_timer_values[3] = cart_wait_control_timer_values[3];
+    u16 IME = set_IME(0);
+    u32 counter = 0;
+
+    for (int i = 0; i < 4; i++, counter++) {
+        u32 timer_val = call_from_stack(run_cart_wait_control_test, i, 0);
+        if (timer_val != local_timer_values[i]) {
+            flags |= 1 << counter;
+        }
+    }
     set_IME(IME);
     return flags;
 }

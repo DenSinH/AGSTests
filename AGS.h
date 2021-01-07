@@ -131,9 +131,27 @@ typedef struct s_affine_settings {
     i16 ScalingY;
     u16 Angle;
 } s_affine_settings;
+
 /*
  * Just the BGAffineSet SWI. At 08012150.
  * */
 extern void BGAffineSet(s_affine_settings* settings, void* dest, u32 number_of_calculations);
+
+/*
+ * a memcpy routine using ldmia/stmia without BIOS overhead. At 080127e8.
+ * */
+extern void memcpy32(void* dest, const void* src, size_t len);
+
+/*
+ * A function taking 4 params:
+ *  - a pointer to a function
+ *  - a pointer to the end of a function
+ *  - an argument for the function to be called
+ *  - another argument for the function to be called
+ *
+ * For clarity, I will make this 3 arguments. Actual function is at 0800f150.
+ * */
+extern u32 call_from_stack(u32 (*func)(u32, u32), u32 arg1, u32 arg2);
+
 
 #endif //AGS_AGS_H

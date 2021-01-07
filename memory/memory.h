@@ -111,6 +111,46 @@ u32 OAM_test(u32* buffer);
 u32 prefetch_buffer_test();
 
 /*
+ * function at 0800329c
+ * return at 08003300
+ * runs a single timing test for the waitstate control given the settings
+ * */
+u32 run_waitstate_wait_control_test(u32 waitstate, u32 setting);
+
+/*
+ * function at 080030e8
+ * return at 08003198
+ * Tests waitstate control for different settings.
+ * */
+
+// at 080190f0
+static const u32 wait_control_timer_values[3][8] = {
+    { 0x28, 0x24, 0x20, 0x38, 0x24, 0x20, 0x1C, 0x34 },
+    { 0x30, 0x2C, 0x28, 0x40, 0x24, 0x20, 0x1C, 0x34 },
+    { 0x40, 0x3C, 0x38, 0x50, 0x24, 0x20, 0x1C, 0x34 },
+};
+u32 waitstate_wait_control_test();
+
+/*
+ * function at 0800329c
+ * return at 08003300
+ * runs a single timing test for the cart wait control given the setting.
+ * */
+u32 run_cart_wait_control_test(u32 setting, u32 _);
+
+/*
+ * function at 080031b8
+ * return at 0800324c
+ * Tests waitstate control for different settings.
+ * */
+
+// at 0801915c
+static const u32 cart_wait_control_timer_values[4] = {
+    0x1c, 0x18, 0x14, 0x2c
+};
+u32 cartrige_ram_wait_control();
+
+/*
  * function at 0800ce6c
  * return at 0800ced6
  *
