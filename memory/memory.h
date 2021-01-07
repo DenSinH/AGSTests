@@ -9,6 +9,17 @@
 #define IWRAM_START ((u8*)0x03000000)
 // we don't want to touch the stack
 #define IWRAM_LENGTH 0x00007d00
+#define PRAM_START ((u8*)0x05000000)
+#define PRAM_LENGTH 0x400
+
+enum memory_test_flags : u32 {
+    memory_test_const8_fill       = 0x01,
+    memory_test_incrementing_fill = 0x02,
+    memory_test_const32_fill      = 0x04,
+    memory_test_dma16             = 0x08,
+    memory_test_dma32             = 0x10,
+    memory_test_endianness        = 0x20,
+};
 
 /*
  * function at 080020e8
@@ -16,15 +27,6 @@
  *
  * Function used to test eWRAM memory region
  * */
-enum ewram_test_flags : u32 {
-    ewram_test_const8_fill       = 0x01,
-    ewram_test_incrementing_fill = 0x02,
-    ewram_test_const32_fill      = 0x04,
-    ewram_test_dma16             = 0x08,
-    ewram_test_dma32             = 0x10,
-    ewram_test_endianness        = 0x20,
-};
-
 u32 eWRAM_test(u32* buffer);
 
 /*
@@ -34,14 +36,6 @@ u32 eWRAM_test(u32* buffer);
  * Function used to test iWRAM memory region. The tests are very similar to the eWRAM tests, except they all
  * happen in VBlank now.
  * */
-enum iwram_test_flags : u32 {
-    iwram_test_const8_fill       = 0x01,
-    iwram_test_incrementing_fill = 0x02,
-    iwram_test_const32_fill      = 0x04,
-    iwram_test_dma16             = 0x08,
-    iwram_test_dma32             = 0x10,
-    iwram_test_endianness        = 0x20,
-};
 u32 iWRAM_test(u32* buffer);
 
 /*
@@ -60,6 +54,14 @@ typedef struct s_iWRAM_test_results {
 s_iWRAM_test_results* ptr_iWRAM_results = (s_iWRAM_test_results*)0x03001080;
 
 void iWRAM_test_async();
+
+/*
+ * function at 08002488
+ * return at 0800260a
+ *
+ * Actual tests for the Palette RAM region. Basically the same as the eWRAM tests.
+ * */
+u32 PRAM_test(u32* buffer);
 
 /*
  * function at 0800ce6c
@@ -163,5 +165,11 @@ u32 cpu_external_work_ram();
  * return at 080022e2
  * */
 u32 cpu_internal_work_ram();
+
+/*
+ * test at 0800260c
+ * return at 08002626
+ * */
+u32 palette_ram();
 
 #endif //AGS_MEMORY_H
