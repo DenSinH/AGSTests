@@ -225,3 +225,24 @@ bool mem_read_write_checksum(u8* dest, const u8* dest_end, u32 start_val, u8** f
     set_IME(IME);
     return failed;
 }
+
+u32 prefetch_buffer_test() {
+    // reset timer 0
+    *ptr_TM0CNT = 0;
+    *ptr_TM0CNT = 0x00800000;
+
+    // r4 = ptr_TM0CNT
+    __asm__(
+        "ldr r2,[r4,#0x0]\n"
+        "ldr r2,[r4,#0x0]\n"
+        "ldr r2,[r4,#0x0]\n"
+        "ldr r2,[r4,#0x0]\n"
+        "ldr r2,[r4,#0x0]\n"
+        "ldr r2,[r4,#0x0]\n"
+        "ldr r2,[r4,#0x0]\n"
+        "ldr r2,[r4,#0x0]"
+    );
+
+    // a halfword read with r0 right after:
+    return *ptr_TM0CNT;
+}

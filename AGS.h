@@ -13,6 +13,7 @@
 #define ptr_DMA3CNT ((u32*)0x040000dc)
 #define ptr_TM0CNT ((u32*)0x04000100)
 #define ptr_IF ((u16*)0x04000202)
+#define ptr_WAITCNT ((u16*)0x04000204)
 
 #define ptr_BG2PA ((u16*)0x4000020)
 #define ptr_BG2PB ((u16*)0x4000022)

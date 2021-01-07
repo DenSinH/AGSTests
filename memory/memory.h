@@ -104,6 +104,13 @@ u32 VRAM_test_2(u32* buffer);
 u32 OAM_test(u32* buffer);
 
 /*
+ * function at 0800326c
+ * return at 08003290
+ * Reads TM0CNT and checks returns the value after some reads to check the prefetch buffer length.
+ * */
+u32 prefetch_buffer_test();
+
+/*
  * function at 0800ce6c
  * return at 0800ced6
  *
@@ -231,5 +238,19 @@ u32 vram();
  * return at 08002c8a
  * */
 u32 oam();
+
+/*
+ * test at 08002fb8
+ * return at 08002ff2
+ *
+ * Literally just checks if the top bit of WAITCNT is 0.
+ * */
+u32 cartridge_type_flag();
+
+/*
+ * test at 08003010
+ * return at 0800308a
+ * */
+u32 prefetch_buffer();
 
 #endif //AGS_MEMORY_H

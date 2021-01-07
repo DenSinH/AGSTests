@@ -335,3 +335,35 @@ u32 OAM_test(u32* buffer) {
     set_IME(IME);
     return flags;
 }
+
+u32 cartridge_type_flag() {
+    // just checks the top bit of WAITCNT
+    return (*ptr_WAITCNT & 0x8000) != 0;
+}
+
+u32 prefetch_buffer() {
+    u32 flags = 0;
+
+    u16 IME = set_IME(0);
+    u16 WAITCNT = *ptr_WAITCNT;
+
+    // wait state 0: First access 3 cycles (setting 1)
+    // wait state 0: Second access 1 cycle (setting 1)
+    // Prefetch buffer enable
+    *ptr_WAITCNT = 0x4014;
+    if (prefetch_buffer_test() != 0x18) {
+        flags |= 1;
+    }
+
+    // wait state 0: First access 3 cycles (setting 1)
+    // wait state 0: Second access 1 cycle (setting 1)
+    // Prefetch buffer disable
+    *ptr_WAITCNT = 0x0014;
+    if (prefetch_buffer_test() != 0x33) {
+        flags |= 2;
+    }
+
+    *ptr_WAITCNT = WAITCNT;
+    set_IME(IME);
+    return flags;
+}
