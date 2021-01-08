@@ -26,4 +26,23 @@ typedef struct s_vcount_test_value {
 } s_vcount_test_values;
 u32 vcounter();
 
+/*
+ * function at 0800362c
+ * return at 080036a4
+ * Runs the VCount intr flag test. Basically, sets the VCount match to 16 scanlines ahead, and waits for VCount
+ * to catch up. This will freeze a system if VCount doesn't work at all.
+ * */
+void test_vcount_intr_flag();
+
+/*
+ * function at 08003574
+ * return at 0800360e
+ * Tests if the VCount interrupt flag will be set.
+ *
+ * return flags:
+ *  1: No VCount interrupt requested in IF when one should have.
+ *  2: VCount interrupt requested in IF when it shouldn't have been.
+ * */
+u32 vcount_intr_flag();
+
 #endif //AGS_LCD_H

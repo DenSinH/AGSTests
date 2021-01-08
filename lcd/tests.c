@@ -26,10 +26,10 @@ u32 run_vcounter_test(u32 _buffer, u32 number_of_tests) {
 }
 
 u32 vcounter() {
-    u16 failed = 0;
+    u16 flags = 0;
     s_vcount_test_values buffer[456] = {};
     u16 IME = set_IME(0);
-    call_from_stack(run_vcounter_test, (u32)buffer, 456);
+    call_from_stack(run_vcounter_test, (u32) buffer, 456);
 
     // check VCount values
     u16 VCount = buffer[0].VCount;
@@ -40,23 +40,60 @@ u32 vcounter() {
                 VCount = 0;
             }
             if (VCount != buffer[i].VCount) {
-                failed |= 2;
+                flags |= 2;
                 break;
             }
         }
-    }
-    else {
-        failed |= 2;
+    } else {
+        flags |= 2;
     }
 
     // check timer values
     for (int i = 1; i < 228; i++) {
         if (!(0x4c1 <= buffer[i].TM0 && buffer[i].TM0 <= 0x4d1)) {
-            failed |= 1;
+            flags |= 1;
             break;
         }
     }
 
     set_IME(IME);
-    return failed;
+    return flags;
+}
+
+void test_vcount_intr_flag() {
+    u16 VCount = *ptr_VCOUNT + 0x10;
+    if (VCount > 227) {
+        VCount = 0;
+    }
+
+    // set VCount match
+    *ptr_DISPSTAT = (*ptr_DISPSTAT & 0xff) | (VCount << 8);
+    do { } while (*ptr_VCOUNT != VCount);
+}
+
+u32 vcount_intr_flag() {
+    u16 flags = 0;
+
+    u16 IME = set_IME(0);
+    u16 DISPSTAT = *ptr_DISPSTAT;
+    *ptr_DISPSTAT = 0x20;  // V-Counter IRQ Enable
+    *ptr_IF = intr_VCount; // clear VCount IRQs
+
+    test_vcount_intr_flag();
+    // at this point, a V-Counter IRQ should have been requested
+    if (!((*ptr_IF) & intr_VCount)) {
+        flags |= 1;
+    }
+
+    *ptr_DISPSTAT = 0;      // V-Counter IRQ Disable
+    *ptr_IF = intr_VCount;  // clear VCount IRQs
+
+    test_vcount_intr_flag();
+    // at this point, V-Count match happened, but no IRQ should be requested
+    if ((*ptr_IF) & intr_VCount) {
+        flags |= 2;
+    }
+    *ptr_DISPSTAT = DISPSTAT;
+    set_IME(IME);
+    return flags;
 }
