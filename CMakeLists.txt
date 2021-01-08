@@ -8,6 +8,6 @@ add_library(
         default.h
         memory/memory.c
         memory/memory.h
-        AGS.c AGS.h memory/tests.c)
+        AGS.c AGS.h memory/tests.c lcd/lcd.c lcd/lcd.h lcd/tests.c)
 
 include_directories(AGS ${CMAKE_CURRENT_SOURCE_DIR})

@@ -6,8 +6,9 @@
 /*
  * A few default functions / values used in the ROM
  * */
-#define ptr_DISPSTAT ((u16*)0x04000004)
 #define ptr_DISPCNT ((u16*)0x04000000)
+#define ptr_DISPSTAT ((u16*)0x04000004)
+#define ptr_VCOUNT ((u16*)0x04000006)
 #define ptr_DMA3SAD ((u32*)0x040000d4)
 #define ptr_DMA3DAD ((u32*)0x040000d8)
 #define ptr_DMA3CNT ((u32*)0x040000dc)
