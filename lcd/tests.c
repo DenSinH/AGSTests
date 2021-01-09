@@ -9,10 +9,13 @@ u32 run_vcounter_test(u32 _buffer, u32 number_of_tests) {
     s_vcount_test_values* buffer_end = buffer + number_of_tests;
     u16 VCount_start = *ptr_VCOUNT;
     u16 VCount;
+    bool VCount_match;
     do {
         do {
             VCount = *ptr_VCOUNT;
-        } while (VCount_start != VCount);
+            VCount_match = VCount == VCount_start;
+            VCount_start = VCount;
+        } while (VCount_match);
 
         // read timer value and reset
         u16 TM0CNT = *ptr_TM0CNT;
@@ -50,7 +53,7 @@ u32 vcounter() {
 
     // check timer values
     for (int i = 1; i < 228; i++) {
-        if (!(0x4c1 <= buffer[i].TM0 && buffer[i].TM0 <= 0x4d1)) {
+        if (!(1217 <= buffer[i].TM0 && buffer[i].TM0 <= 1233)) {
             flags |= 1;
             break;
         }
