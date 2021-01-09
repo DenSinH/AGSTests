@@ -60,17 +60,6 @@ u32 vcounter() {
     return flags;
 }
 
-void test_vcount_intr_flag() {
-    u16 VCount = *ptr_VCOUNT + 0x10;
-    if (VCount > 227) {
-        VCount = 0;
-    }
-
-    // set VCount match
-    *ptr_DISPSTAT = (*ptr_DISPSTAT & 0xff) | (VCount << 8);
-    do { } while (*ptr_VCOUNT != VCount);
-}
-
 u32 vcount_intr_flag() {
     u16 flags = 0;
 
@@ -79,7 +68,7 @@ u32 vcount_intr_flag() {
     *ptr_DISPSTAT = 0x20;  // V-Counter IRQ Enable
     *ptr_IF = intr_VCount; // clear VCount IRQs
 
-    test_vcount_intr_flag();
+    wait_for_vcount_match();
     // at this point, a V-Counter IRQ should have been requested
     if (!((*ptr_IF) & intr_VCount)) {
         flags |= 1;
@@ -88,12 +77,222 @@ u32 vcount_intr_flag() {
     *ptr_DISPSTAT = 0;      // V-Counter IRQ Disable
     *ptr_IF = intr_VCount;  // clear VCount IRQs
 
-    test_vcount_intr_flag();
+    wait_for_vcount_match();
     // at this point, V-Count match happened, but no IRQ should be requested
     if ((*ptr_IF) & intr_VCount) {
         flags |= 2;
     }
     *ptr_DISPSTAT = DISPSTAT;
+    set_IME(IME);
+    return flags;
+}
+
+u32 hblank_intr_flag() {
+    u32 flags = 0;
+
+    u16 IME = set_IME(0);
+    u16 DISPSTAT = *ptr_DISPSTAT;
+    *ptr_DISPSTAT = 0x10;   // enable HBlank IRQ
+    *ptr_IF = intr_HBlank;  // clear interrupt
+
+    wait_for_line();
+    // at this point, HBlank IRQ should have been requested
+    if (!(*ptr_IF & intr_HBlank)) {
+        flags |= 1;
+    }
+
+    *ptr_DISPSTAT = 0;  // disable HBlank IRQ
+    *ptr_IF = intr_HBlank;  // clear interrupt
+    wait_for_line();
+    // at this point, HBlank should have happened, but no IRQ should have fired
+
+    if (*ptr_IF & intr_HBlank) {
+        flags |= 2;
+    }
+    *ptr_DISPSTAT = DISPSTAT;
+    set_IME(IME);
+
+    return flags;
+}
+
+u32 vblank_intr_flag() {
+    u32 flags = 0;
+
+    u16 IME = set_IME(0);
+    u16 DISPSTAT = *ptr_DISPSTAT;
+    *ptr_DISPSTAT = 8;      // enable VBlank IRQ
+    *ptr_IF = intr_VBlank;  // clear interrupt
+
+    wait_for_frame();
+    // at this point, VBlank IRQ should have been requested
+    if (!(*ptr_IF & intr_VBlank)) {
+        flags |= 1;
+    }
+
+    *ptr_DISPSTAT = 0;  // disable VBlank IRQ
+    *ptr_IF = intr_VBlank;  // clear interrupt
+    wait_for_frame();
+    // at this point, VBlank should have happened, but no IRQ should have fired
+
+    if (*ptr_IF & intr_VBlank) {
+        flags |= 2;
+    }
+    *ptr_DISPSTAT = DISPSTAT;
+    set_IME(IME);
+
+    return flags;
+}
+
+u32 run_vcount_status_test(u32 _buffer, u32 length) {
+    s_vcount_status_test_value* buffer = (s_vcount_status_test_value*)_buffer;
+
+    u16 VCount_status = (*ptr_DISPSTAT) & 4;
+    u16 new_VCount_status;
+    bool VCount_status_change;
+    do {
+        // wait until VCount match flag set
+        do {
+            new_VCount_status = (*ptr_DISPSTAT) & 4;  // <---- (1)
+            VCount_status_change = new_VCount_status != VCount_status;
+            VCount_status = new_VCount_status;
+        } while (!VCount_status_change);
+
+        // done in a single store, using the value loaded at (1) (the full value, not the & 4'ed value)
+        buffer->DISPSTAT = *ptr_DISPSTAT;
+        buffer->VCOUNT   = *ptr_VCOUNT;
+        buffer++;
+    } while ((u32)buffer != _buffer + length);
+    return 0;
+}
+
+u32 vcount_status() {
+    u16 flags = 0;
+
+    s_vcount_status_test_value buffer[4] = {};
+    u16 IME = set_IME(0);
+    u16 DISPSTAT = *ptr_DISPSTAT;
+    u16 VCount_match = (*ptr_VCOUNT) + 10;
+    if (VCount_match > 226) {
+        VCount_match = 0;
+    }
+    *ptr_DISPSTAT = (VCount_match << 8);  // set VCount match to be in 10 lines
+
+    for (int i = 0; i < 4; i++) {
+        // check if flag is set in DISPSTAT
+        if (!(buffer[i].DISPSTAT & 4)) {
+            flags |= 1;
+            break;
+        }
+        // check if it happened at the right VCount value
+        else if (buffer[i].VCOUNT != VCount_match) {
+            flags |= 2;
+            break;
+        }
+    }
+    *ptr_DISPSTAT = DISPSTAT;
+    set_IME(IME);
+    return flags;
+}
+
+u32 run_hblank_status_test(u32 _buffer, u32 length) {
+    s_hblank_status_test_value* buffer = (s_hblank_status_test_value*)_buffer;
+
+    // reset timer
+    *ptr_TM0CNT = 0;
+    *ptr_TM0CNT = 0x00800000;
+    u16 HBlank_status = (*ptr_DISPSTAT) & 2;
+    bool HBlank_status_change;
+    u16 DISPSTAT;
+    do {
+        // wait until HBlank status change
+        do {
+            DISPSTAT = *ptr_DISPSTAT;
+            u16 new_HBlank_status = DISPSTAT & 2;
+            HBlank_status_change = HBlank_status != new_HBlank_status;
+            HBlank_status = new_HBlank_status;
+        } while (!HBlank_status_change);
+
+        u16 TM0CNT = *ptr_TM0CNT;
+        // reset timer
+        *ptr_TM0CNT = 0;
+        *ptr_TM0CNT = 0x00800000;
+
+        // done in a single store, using the value loaded at (1) (the full value, not the & 4'ed value)
+        buffer->DISPSTAT = DISPSTAT;
+        buffer->TM0CNT   = TM0CNT;
+        buffer++;
+    } while ((u32)buffer != _buffer + length);
+    *ptr_TM0CNT = 0;
+    return 0;
+}
+u32 hblank_status() {
+    u16 flags = 0;
+
+    s_hblank_status_test_value buffer[456] = {};
+
+    u16 IME = set_IME(0);
+    call_from_stack(run_hblank_status_test, (u32)buffer, 0);
+    for (int i = 0; i < 456; i++) {
+        if (!(buffer[i].DISPSTAT & 2)) {
+            if (!((209 <= buffer[i].TM0CNT) && (buffer[i].TM0CNT <= 225))) {
+                flags |= 1;
+                break;
+            }
+        }
+        else {
+            if (!((990 <= buffer[i].TM0CNT) && (buffer[i].TM0CNT <= 1009))) {
+                flags |= 2;
+                break;
+            }
+        }
+    }
+    set_IME(IME);
+    return flags;
+}
+
+u32 run_vblank_status_test(u32 _buffer, u32 length) {
+    s_vcount_status_test_value* buffer = (s_vcount_status_test_value*)_buffer;
+
+    u32 VBlank_status = (*ptr_DISPSTAT) & 1;
+    bool VBlank_status_change;
+    do {
+        // wait until HBlank status change
+        do {
+            u16 new_VBlank_status = (*ptr_DISPSTAT) & 2;  // <--- 32 bit load (1)
+            VBlank_status_change = VBlank_status != new_VBlank_status;
+            VBlank_status = new_VBlank_status;
+        } while (!VBlank_status_change);
+
+        // these loads come from the same load as (1)
+        buffer->DISPSTAT = *ptr_DISPSTAT;
+        buffer->VCOUNT   = *ptr_VCOUNT;
+        buffer++;
+    } while ((u32)buffer != (_buffer + length));
+    return 0;
+}
+
+u32 vblank_status() {
+    u32 flags = 0;
+
+    s_vcount_status_test_value buffer[4] = {};
+
+    u16 IME = set_IME(0);
+    call_from_stack(run_hblank_status_test, buffer, 4);
+    for (int i = 0; i < 4; i++) {
+        if (!(buffer[i].DISPSTAT & 1)) {
+            if (buffer[i].VCOUNT != 227) {
+                flags |= 1;
+                break;
+            }
+        }
+        else {
+            if (buffer[i].VCOUNT != 160) {
+                // I think this is a bug...
+                flags |= 1;
+                break;
+            }
+        }
+    }
     set_IME(IME);
     return flags;
 }
