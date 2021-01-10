@@ -53,3 +53,7 @@ dkms.conf
 
 cmake-*/
 .idea/
+scratchpad.c
+*.gba
+venv/
+*.dshba
