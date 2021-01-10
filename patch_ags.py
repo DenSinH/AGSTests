@@ -21,8 +21,8 @@ for i in range(4):
     AGS[i + 0x1421d8] = [0xdd, 0x8a, 0x00, 0x08][i]
     # CARTRIDGE_INTR test
     AGS[i + 0x1421ec] = [0x3d, 0xcd, 0x00, 0x08][i]
-    # EXECUTE_STOP_FUNCTION test
-    AGS[i + 0x142200] = [0x05, 0xce, 0x00, 0x08][i]
+    # EXECUTE_STOP_FUNCTION test (probably freezes it up if you implement STOP in your emulator)
+    # AGS[i + 0x142200] = [0x05, 0xce, 0x00, 0x08][i]
     # EXECUTE_HALT_FUNCTION test (freezes it up)
     # AGS[i + 0x142214] = [0x3d, 0xce, 0x00, 0x08][i]
 
