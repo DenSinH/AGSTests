@@ -311,3 +311,34 @@ u32 DMA_display_start() {
     set_IME(IME);
     return flags;
 }
+
+u32 DMA_intr_flag() {
+    u32 flags = 0;
+
+    u16 IME = set_IME(0);
+    for (int channel = 0; channel < 4; channel++) {
+        *ptr_IF = intr_DMA0 << channel;  // clear interrupt
+        *ptr_DMASAD(channel) = ptr_VCOUNT;
+        *ptr_DMADAD(channel) = EWRAM_START;
+        *ptr_DMACNT(channel) = ((DMAEnable | DMAIRQ | DMAStartImmediate | DMASrcFixed | DMADestIncrement) << 16) | 1;
+
+        // wait for DMA to finish
+        do { } while ((*ptr_DMACNT(channel)) * (DMAEnable << 16));
+        if (((*ptr_IF) & (intr_DMA0 << channel)) == 0) {
+            flags |= 1 << (2 * channel);
+        }
+
+        *ptr_IF = intr_DMA0 << channel;  // clear interrupt
+        *ptr_DMASAD(channel) = ptr_VCOUNT;
+        *ptr_DMADAD(channel) = EWRAM_START;
+        *ptr_DMACNT(channel) = ((DMAEnable | DMAStartImmediate | DMASrcFixed | DMADestIncrement) << 16) | 1;
+
+        // wait for DMA to finish
+        do { } while ((*ptr_DMACNT(channel)) * (DMAEnable << 16));
+        if (((*ptr_IF) & (intr_DMA0 << channel)) != 0) {
+            flags |= 2 << (2 * channel);
+        }
+    }
+    set_IME(IME);
+    return flags;
+}

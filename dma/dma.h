@@ -73,6 +73,7 @@ u32 DMA_hblank_start();
 /*
  * function at 0800a630
  * return at 0800a784
+ *
  * Sets the DMA start timing for DMA3 to special and transfers VCont to EWRAM for 1 frame. Checks if all the values
  * transferred are incrementing values from 2 to 161 (video DMA starts in line 2 and ends in 162) and then 68 zeros\
  * (no DMA for the remaining lines).
@@ -81,5 +82,17 @@ u32 DMA_hblank_start();
  *  2: DMA did not transfer the right values
  * */
 u32 DMA_display_start();
+
+/*
+ * function at 0800a838
+ * return at 0800a9d0
+ *
+ * Very similar to the timer/lcd interrupt flag tests. Basically, clears IF, enables 2 immediate DMAs, one with
+ * IRQ and one without and checks if the IF bit is set appropriately.
+ * return flags: 2 bits per channel. LSB = DMA0
+ * 1: IRQ not requested when it should have been
+ * 2: IRQ requested when it shouldn't have been
+ * */
+u32 DMA_intr_flag();
 
 #endif //AGS_DMA_H
