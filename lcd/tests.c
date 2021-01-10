@@ -95,7 +95,7 @@ u32 hblank_intr_flag() {
 
     u16 IME = set_IME(0);
     u16 DISPSTAT = *ptr_DISPSTAT;
-    *ptr_DISPSTAT = DISPSTAT_HBLankIRQ;   // enable HBlank IRQ
+    *ptr_DISPSTAT = DISPSTAT_HBlankIRQ;   // enable HBlank IRQ
     *ptr_IF = intr_HBlank;  // clear interrupt
 
     wait_for_line();

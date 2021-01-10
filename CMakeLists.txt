@@ -8,6 +8,6 @@ add_library(
         default.h
         memory/memory.c
         memory/memory.h
-        AGS.c AGS.h memory/tests.c lcd/lcd.c lcd/lcd.h lcd/tests.c timer/timer.c timer/timer.h timer/tests.c dma/dma.c dma/dma.h dma/tests.c dma/expected.h)
+        AGS.c AGS.h memory/tests.c lcd/lcd.c lcd/lcd.h lcd/tests.c timer/timer.c timer/timer.h timer/tests.c dma/dma.c dma/dma.h dma/tests.c dma/expected.h keyinput/keyinput.h keyinput/tests.c interrupts/interrupts.c interrupts/interrupts.h interrupts/tests.c)
 
 include_directories(AGS ${CMAKE_CURRENT_SOURCE_DIR})

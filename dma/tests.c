@@ -15,7 +15,7 @@ u32 DMA_address_control(u16 channel) {
     clear_interrupt_settings(&old_settings, 1, intr_HBlank);
     u16 DISPSTAT = *ptr_DISPSTAT;
 
-    *ptr_DISPSTAT = DISPSTAT_HBLankIRQ;  // HBlank IRQ enable
+    *ptr_DISPSTAT = DISPSTAT_HBlankIRQ;  // HBlank IRQ enable
     for (int i = 0; i < 0x100; i++) {
         incrementing_buffer[i] = i;
     }

@@ -19,6 +19,12 @@
 #define ptr_DMA3DAD ((u32*)0x040000d8)
 #define ptr_DMA3CNT ((u32*)0x040000dc)
 #define ptr_TM0CNT ((u32*)0x04000100)
+#define ptr_TMCNT(_timer) ((u32*)(0x04000100 + 4 * (_timer)))
+#define ptr_SIOCNT ((u16*)0x04000128)
+#define ptr_RCNT ((u16*)0x04000134)
+#define ptr_SIOMLT_SEND ((u16*)0x0400012a)
+#define ptr_KEYINPUT ((u16*)0x04000300)
+#define ptr_KEYCNT ((u16*)0x04000302)
 #define ptr_IF ((u16*)0x04000202)
 #define ptr_WAITCNT ((u16*)0x04000204)
 
@@ -82,7 +88,7 @@ typedef enum DISPSTAT_settings {
     DISPSTAT_HBLank        = 0x0002,
     DISPSTAT_VCount        = 0x0004,
     DISPSTAT_VBlankIRQ     = 0x0008,
-    DISPSTAT_HBLankIRQ     = 0x0010,
+    DISPSTAT_HBlankIRQ     = 0x0010,
     DISPSTAT_VCountIRQ     = 0x0020,
 } DISPSTAT_settings;
 
