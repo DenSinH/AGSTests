@@ -9,6 +9,12 @@
 #define ptr_DISPCNT ((u16*)0x04000000)
 #define ptr_DISPSTAT ((u16*)0x04000004)
 #define ptr_VCOUNT ((u16*)0x04000006)
+#define ptr_DMASAD(_channel) ((u32*)(0x040000b0 + 0xc * _channel))
+#define ptr_DMADAD(_channel) ((u32*)(0x040000b4 + 0xc * _channel))
+#define ptr_DMACNT(_channel) ((u32*)(0x040000b8 + 0xc * _channel))
+#define ptr_DMA0SAD ((u32*)0x040000b0)
+#define ptr_DMA0DAD ((u32*)0x040000b4)
+#define ptr_DMA0CNT ((u32*)0x040000b8)
 #define ptr_DMA3SAD ((u32*)0x040000d4)
 #define ptr_DMA3DAD ((u32*)0x040000d8)
 #define ptr_DMA3CNT ((u32*)0x040000dc)
@@ -110,6 +116,13 @@ void* set_interrupt_handler(u16 intr, void* callback);
 void set_interrupt_settings(s_interrupt_settings* new);
 
 /*
+ * function at 0800d640
+ * return at 0800d688
+ * Clears the interrupt flag corresponding to the interrupt passed and waits for it to happen again.
+ * */
+void wait_for_interrupt(u16 interrupt);
+
+/*
  * function at 0800d730
  * return at 0800d75e
  * Simply sets IME and returns the old value it was. (really nothing else)
@@ -154,5 +167,10 @@ extern void memcpy32(void* dest, const void* src, size_t len);
  * */
 extern u32 call_from_stack(u32 (*func)(u32, u32), u32 arg1, u32 arg2);
 
+/*
+ * basis memcpy and memset functions.
+ * */
+extern void memcpy(void* dest, void* src, size_t len);
+extern void memset(void* dest, char value, size_t len);
 
 #endif //AGS_AGS_H

@@ -1,5 +1,4 @@
 #include "./memory.h"
-#include <string.h>
 
 u32 cpu_external_work_ram() {
     u32 buffer[8];

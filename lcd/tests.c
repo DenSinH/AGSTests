@@ -68,7 +68,7 @@ u32 vcount_intr_flag() {
 
     u16 IME = set_IME(0);
     u16 DISPSTAT = *ptr_DISPSTAT;
-    *ptr_DISPSTAT = 0x20;  // V-Counter IRQ Enable
+    *ptr_DISPSTAT = DISPSTAT_VCountIRQ;  // V-Counter IRQ Enable
     *ptr_IF = intr_VCount; // clear VCount IRQs
 
     wait_for_vcount_match();
@@ -95,7 +95,7 @@ u32 hblank_intr_flag() {
 
     u16 IME = set_IME(0);
     u16 DISPSTAT = *ptr_DISPSTAT;
-    *ptr_DISPSTAT = 0x10;   // enable HBlank IRQ
+    *ptr_DISPSTAT = DISPSTAT_HBLankIRQ;   // enable HBlank IRQ
     *ptr_IF = intr_HBlank;  // clear interrupt
 
     wait_for_line();
@@ -123,7 +123,7 @@ u32 vblank_intr_flag() {
 
     u16 IME = set_IME(0);
     u16 DISPSTAT = *ptr_DISPSTAT;
-    *ptr_DISPSTAT = 8;      // enable VBlank IRQ
+    *ptr_DISPSTAT = DISPSTAT_VBlankIRQ;      // enable VBlank IRQ
     *ptr_IF = intr_VBlank;  // clear interrupt
 
     wait_for_frame();
@@ -149,13 +149,13 @@ u32 vblank_intr_flag() {
 u32 run_vcount_status_test(u32 _buffer, u32 length) {
     s_vcount_status_test_value* buffer = (s_vcount_status_test_value*)_buffer;
 
-    u16 VCount_status = (*ptr_DISPSTAT) & 4;
+    u16 VCount_status = (*ptr_DISPSTAT) & DISPSTAT_VCount;
     u16 new_VCount_status;
     bool VCount_status_change;
     do {
         // wait until VCount match flag set
         do {
-            new_VCount_status = (*ptr_DISPSTAT) & 4;  // <---- (1)
+            new_VCount_status = (*ptr_DISPSTAT) & DISPSTAT_VCount;  // <---- (1)
             VCount_status_change = new_VCount_status != VCount_status;
             VCount_status = new_VCount_status;
         } while (!VCount_status_change);
@@ -182,7 +182,7 @@ u32 vcount_status() {
 
     for (int i = 0; i < 4; i++) {
         // check if flag is set in DISPSTAT
-        if (!(buffer[i].DISPSTAT & 4)) {
+        if (!(buffer[i].DISPSTAT & DISPSTAT_VCount)) {
             flags |= 1;
             break;
         }
@@ -203,14 +203,14 @@ u32 run_hblank_status_test(u32 _buffer, u32 length) {
     // reset timer
     *ptr_TM0CNT = 0;
     *ptr_TM0CNT = 0x00800000;
-    u16 HBlank_status = (*ptr_DISPSTAT) & 2;
+    u16 HBlank_status = (*ptr_DISPSTAT) & DISPSTAT_HBLank;
     bool HBlank_status_change;
     u16 DISPSTAT;
     do {
         // wait until HBlank status change
         do {
             DISPSTAT = *ptr_DISPSTAT;
-            u16 new_HBlank_status = DISPSTAT & 2;
+            u16 new_HBlank_status = DISPSTAT & DISPSTAT_HBLank;
             HBlank_status_change = HBlank_status != new_HBlank_status;
             HBlank_status = new_HBlank_status;
         } while (!HBlank_status_change);
@@ -236,7 +236,7 @@ u32 hblank_status() {
     u16 IME = set_IME(0);
     call_from_stack(run_hblank_status_test, (u32)buffer, 0);
     for (int i = 0; i < 456; i++) {
-        if (!(buffer[i].DISPSTAT & 2)) {
+        if (!(buffer[i].DISPSTAT & DISPSTAT_HBLank)) {
             if (!((209 <= buffer[i].TM0CNT) && (buffer[i].TM0CNT <= 225))) {
                 flags |= 1;
                 break;
@@ -256,12 +256,12 @@ u32 hblank_status() {
 u32 run_vblank_status_test(u32 _buffer, u32 length) {
     s_vcount_status_test_value* buffer = (s_vcount_status_test_value*)_buffer;
 
-    u32 VBlank_status = (*ptr_DISPSTAT) & 1;
+    u32 VBlank_status = (*ptr_DISPSTAT) & DISPSTAT_VBlank;
     bool VBlank_status_change;
     do {
         // wait until HBlank status change
         do {
-            u16 new_VBlank_status = (*ptr_DISPSTAT) & 2;  // <--- 32 bit load (1)
+            u16 new_VBlank_status = (*ptr_DISPSTAT) & DISPSTAT_VBlank;  // <--- 32 bit load (1)
             VBlank_status_change = VBlank_status != new_VBlank_status;
             VBlank_status = new_VBlank_status;
         } while (!VBlank_status_change);
@@ -282,7 +282,7 @@ u32 vblank_status() {
     u16 IME = set_IME(0);
     call_from_stack(run_hblank_status_test, buffer, 4);
     for (int i = 0; i < 4; i++) {
-        if (!(buffer[i].DISPSTAT & 1)) {
+        if (!(buffer[i].DISPSTAT & DISPSTAT_VBlank)) {
             if (buffer[i].VCOUNT != 227) {
                 flags |= 1;
                 break;

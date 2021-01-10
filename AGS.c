@@ -32,3 +32,8 @@ void set_interrupt_settings(s_interrupt_settings* new) {
     set_IE(new->IE);
     set_IME(new->IME);
 }
+
+void wait_for_interrupt(u16 interrupt) {
+    *ptr_InterruptCheckFlag &= ~interrupt;
+    do { } while (!((*ptr_InterruptCheckFlag) & interrupt));
+}
