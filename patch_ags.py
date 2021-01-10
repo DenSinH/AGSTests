@@ -46,7 +46,6 @@ for i in range(4):
     # JOY BUS READ
     AGS[i + 0x1423cc] = [0x65, 0xba, 0x00, 0x08][i]
 
-
 # DISABLE ALL
 # addr = 0x1421a4
 # while addr < 0x14249b:

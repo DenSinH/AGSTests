@@ -107,6 +107,9 @@ u32 OAM_test(u32* buffer);
  * function at 0800326c
  * return at 08003290
  * Reads TM0CNT and checks returns the value after some reads to check the prefetch buffer length.
+ * return flags:
+ *  1: timing wrong with prefetch buffer
+ *  2: timing wrong without prefetch buffer
  * */
 u32 prefetch_buffer_test();
 
@@ -121,6 +124,7 @@ u32 run_waitstate_wait_control_test(u32 waitstate, u32 setting);
  * function at 080030e8
  * return at 08003198
  * Tests waitstate control for different settings.
+ * return flags: 1 bit for every setting that had the wrong outcome
  * */
 
 // at 080190f0
@@ -142,6 +146,7 @@ u32 run_cart_wait_control_test(u32 setting, u32 _);
  * function at 080031b8
  * return at 0800324c
  * Tests waitstate control for different settings.
+ * return flags: 1 bit for every setting, so 4 bits total (1 if failed, 0 if passed)
  * */
 
 // at 0801915c
