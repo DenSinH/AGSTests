@@ -193,7 +193,7 @@ u32 DMA3_address_control() {
     return DMA_address_control(3);
 }
 
-u32 dma_vblank_start() {
+u32 DMA_vblank_start() {
     u32 flags = 0;
 
     s_interrupt_settings interrupt_settings = {};
@@ -211,7 +211,7 @@ u32 dma_vblank_start() {
         *ptr_DMACNT(channel) = ((DMAEnable | DMAStartVBlank | DMASrcFixed | DMADestFixed) << 16) | 1;
         wait_for_interrupt(intr_VBlank);
         *ptr_DMACNT(channel) = 0;
-        if (*EWRAM_START != 160) {
+        if (*(u16*)EWRAM_START != 160) {
             flags |= 1 << channel;
         }
     }
@@ -220,7 +220,7 @@ u32 dma_vblank_start() {
     return flags;
 }
 
-u32 dma_hblank_start() {
+u32 DMA_hblank_start() {
     u32 flags = 0;
 
     s_interrupt_settings interrupt_settings = {};
@@ -229,6 +229,9 @@ u32 dma_hblank_start() {
     u16 DISPSTAT = *ptr_DISPSTAT;
     *ptr_DISPSTAT = DISPSTAT_VBlankIRQ;  // enable VBlank IRQ
     for (int channel = 0; channel < 4; channel++) {
+        // clear EWRAM
+        mem_set_const(EWRAM_START, 456, 0, mem_set_u32);
+
         // wait for the new frame
         do { } while ((*ptr_VCOUNT) != 227);
         do { } while ((*ptr_VCOUNT) == 227);
@@ -243,7 +246,7 @@ u32 dma_hblank_start() {
         *ptr_DMACNT(channel) = 0;
 
         int i = 0;
-        u8* EWRAM = EWRAM_START;
+        u16* EWRAM = EWRAM_START;
 
         // visible lines should transfer VCount
         for (; i < 160; i++) {
@@ -261,5 +264,50 @@ u32 dma_hblank_start() {
     }
     *ptr_DISPSTAT = DISPSTAT;
     set_interrupt_settings(&interrupt_settings);
+    return flags;
+}
+
+u32 DMA_display_start() {
+    u32 flags = 0;
+
+    u16 IME = set_IME(0);
+
+    // clear EWRAM
+    mem_set_const(EWRAM_START, 456, 0, mem_set_u32);
+
+    // wait for next frame
+    do { } while ((*ptr_VCOUNT) != 227);
+    do { } while ((*ptr_VCOUNT) == 227);
+
+    *ptr_DMA3SAD = ptr_VCOUNT;
+    *ptr_DMA3DAD = EWRAM_START;
+    *ptr_DMA3CNT = ((DMAEnable | DMAStartSpecial | DMARepeat | DMASrcFixed | DMADestIncrement) << 16) | 1;
+
+    // wait for next frame
+    do { } while ((*ptr_VCOUNT) != 227);
+    do { } while ((*ptr_VCOUNT) == 227);
+    // wait until video DMA should be done
+    do { } while ((*ptr_VCOUNT) == 162);
+
+    // fail if DMA is still busy
+    if ((*ptr_DMA3CNT) & (DMAEnable << 16)) {
+        flags |= 1;
+    }
+    *ptr_DMA3CNT = 0;
+    u16* EWRAM = EWRAM_START;
+    int i = 0;
+    for (; i < 160; i++) {
+        if (EWRAM[i] != i + 2) {
+            flags |= 2;
+        }
+    }
+
+    for (; i < 228; i++) {
+        if (EWRAM[i]) {
+            flags |= 2;
+        }
+    }
+
+    set_IME(IME);
     return flags;
 }

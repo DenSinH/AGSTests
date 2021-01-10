@@ -57,7 +57,7 @@ u32 DMA3_address_control();
  * Sets the DMA start timing to VBlank and transfers VCount to EWRAM once. Checks if the value transferred is 160.
  * return flags are 1 bit for each DMA channel, LSB = DMA0, etc.
  * */
-u32 dma_vblank_start();
+u32 DMA_vblank_start();
 
 /*
  * function at 0800a488
@@ -68,6 +68,18 @@ u32 dma_vblank_start();
  * 68 values (no HBlank DMA in VBlank).
  * return flags are 1 bit for each DMA channel, LSB = DMA0, etc.
  * */
-u32 dma_hblank_start();
+u32 DMA_hblank_start();
+
+/*
+ * function at 0800a630
+ * return at 0800a784
+ * Sets the DMA start timing for DMA3 to special and transfers VCont to EWRAM for 1 frame. Checks if all the values
+ * transferred are incrementing values from 2 to 161 (video DMA starts in line 2 and ends in 162) and then 68 zeros\
+ * (no DMA for the remaining lines).
+ * return flags:
+ *  1: DMA not ended in line 162
+ *  2: DMA did not transfer the right values
+ * */
+u32 DMA_display_start();
 
 #endif //AGS_DMA_H
