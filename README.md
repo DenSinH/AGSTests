@@ -9,6 +9,29 @@ is mainly aimed to be a source of information for emulator developers/GBA enthou
 Especially [this file](https://github.com/Normmatt/ags_aging/blob/0aa5aceebc79a26acfd974dd06451bb11f191de0/src/sub_8000AD4.c#L191) 
 is of good use.
 
+## CONTENTS
+Each folder contains the functions related to the tests of whichever category the folder is named after. They all contain a `.h` file with the functions, and info on them. I documented most of them like this:
+```
+ * function at 08009308
+ * return at 0800a282
+ *
+ * Main function for testing DMA address control. Tested for the DMA channel index passed as argument.
+ * Return flags (bits):
+ *
+ * 0:  any test failed / any !HBlank test failed
+ * 1:  any HBlank test failed
+ * 2:  any SrcAddrControl == 0 (increment) test failed
+ * 3:  any SrcAddrControl == 1 (decrement) test failed
+ * 4:  any SrcAddrControl == 2 (fixed) test failed
+ * 5:  any DestAddrControl == 0 (increment) test failed
+ * 6:  any DestAddrControl == 1 (decrement) test failed
+ * 7:  any DestAddrControl == 2 (fixed) test failed
+ * 8:  any DestAddrControl == 3 (increment + reload) test failed
+ * 9:  any !WordSized test failed
+ * 10: any WordSized test failed
+```
+So that you can break at the start of the function, on the return, or compare your output (by either breaking on the return and checking `r0`, or by patching AGS with the `output_test_results_patch.py` script and logging it to your terminal. Every test in the suite returns flags of some sort. Some more than others. Some just 1, but either way, you can see what they mean by looking in the `.md` file, the source in the `tests.c` file and most of them they are also documented in the `.h` file.
+
 ## WHAT IS THIS FOR?
 
 It might be of help to emulator developers trying to find out why they don't pass some AGS test. You can look up what the test does here, and break on where the relevant function returns to see what the flags are that you fail for that test.
