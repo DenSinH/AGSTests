@@ -50,4 +50,24 @@ u32 DMA1_address_control();
 u32 DMA2_address_control();
 u32 DMA3_address_control();
 
+/*
+ * function at 0800a34c
+ * return at 0800a46a
+ *
+ * Sets the DMA start timing to VBlank and transfers VCount to EWRAM once. Checks if the value transferred is 160.
+ * return flags are 1 bit for each DMA channel, LSB = DMA0, etc.
+ * */
+u32 dma_vblank_start();
+
+/*
+ * function at 0800a488
+ * return at 0800a612
+ *
+ * Sets the DMA start timing to HBlank and transfers VCount to EWRAM for 228 HBlanks. Checks if all the values
+ * transferred are incrementing values from 0 to 159 (once for each visible line), and then 0 for the remaining
+ * 68 values (no HBlank DMA in VBlank).
+ * return flags are 1 bit for each DMA channel, LSB = DMA0, etc.
+ * */
+u32 dma_hblank_start();
+
 #endif //AGS_DMA_H

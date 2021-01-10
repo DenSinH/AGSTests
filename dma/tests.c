@@ -192,3 +192,74 @@ u32 DMA2_address_control() {
 u32 DMA3_address_control() {
     return DMA_address_control(3);
 }
+
+u32 dma_vblank_start() {
+    u32 flags = 0;
+
+    s_interrupt_settings interrupt_settings = {};
+
+    clear_interrupt_settings(&interrupt_settings, 1, intr_VBlank);
+    u16 DISPSTAT = *ptr_DISPSTAT;
+    *ptr_DISPSTAT = DISPSTAT_VBlankIRQ;  // enable VBlank IRQ
+    for (int channel = 0; channel < 4; channel++) {
+        // wait for the new frame
+        do { } while ((*ptr_VCOUNT) != 227);
+        do { } while ((*ptr_VCOUNT) == 227);
+        *EWRAM_START = 0;
+        *ptr_DMASAD(channel) = ptr_VCOUNT;
+        *ptr_DMADAD(channel) = EWRAM_START;
+        *ptr_DMACNT(channel) = ((DMAEnable | DMAStartVBlank | DMASrcFixed | DMADestFixed) << 16) | 1;
+        wait_for_interrupt(intr_VBlank);
+        *ptr_DMACNT(channel) = 0;
+        if (*EWRAM_START != 160) {
+            flags |= 1 << channel;
+        }
+    }
+    *ptr_DISPSTAT = DISPSTAT;
+    set_interrupt_settings(&interrupt_settings);
+    return flags;
+}
+
+u32 dma_hblank_start() {
+    u32 flags = 0;
+
+    s_interrupt_settings interrupt_settings = {};
+
+    clear_interrupt_settings(&interrupt_settings, 1, intr_VBlank);
+    u16 DISPSTAT = *ptr_DISPSTAT;
+    *ptr_DISPSTAT = DISPSTAT_VBlankIRQ;  // enable VBlank IRQ
+    for (int channel = 0; channel < 4; channel++) {
+        // wait for the new frame
+        do { } while ((*ptr_VCOUNT) != 227);
+        do { } while ((*ptr_VCOUNT) == 227);
+        *EWRAM_START = 0;
+        *ptr_DMASAD(channel) = ptr_VCOUNT;
+        *ptr_DMADAD(channel) = EWRAM_START;
+        *ptr_DMACNT(channel) = ((DMAEnable | DMAStartHBlank | DMARepeat | DMASrcFixed | DMADestIncrement) << 16) | 1;
+
+        for (int i = 0; i < 228; i++) {
+            wait_for_interrupt(intr_HBlank);
+        }
+        *ptr_DMACNT(channel) = 0;
+
+        int i = 0;
+        u8* EWRAM = EWRAM_START;
+
+        // visible lines should transfer VCount
+        for (; i < 160; i++) {
+            if (EWRAM[i] != i) {
+                flags |= 1 << channel;
+            }
+        }
+
+        // in VBlank no HBlank DMA happens
+        for (; i < 228; i++) {
+            if (EWRAM[i]) {
+                flags |= 1 << channel;
+            }
+        }
+    }
+    *ptr_DISPSTAT = DISPSTAT;
+    set_interrupt_settings(&interrupt_settings);
+    return flags;
+}
