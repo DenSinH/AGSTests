@@ -95,4 +95,18 @@ u32 DMA_display_start();
  * */
 u32 DMA_intr_flag();
 
+/*
+ * function at 0800a9f0
+ * return at 0800ac86
+ *
+ * For each channel 0, 1, 2: starts that channel in HBlank, repeating, and starts channel + 1 with a longer DMA
+ * immediately. Waits for the longer DMA to finish (lower priority). Both channels DMA TM0CNT to a separate part of
+ * EWRAM. Not strict at all timing wise. Fails if any timer value is incorrect or if the higher priority one does not
+ * fire while the lower priority is running.
+ * return flags: 1 for each DMA 0, 1 and 2. LSB = DMA0
+ *  1: any timer value is incorrect or if the higher priority DMA one does not
+ *     fire while the lower priority is running.
+ * */
+u32 DMA_priority();
+
 #endif //AGS_DMA_H

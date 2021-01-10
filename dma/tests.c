@@ -342,3 +342,83 @@ u32 DMA_intr_flag() {
     set_IME(IME);
     return flags;
 }
+
+typedef enum prio_check_mode {
+    prio_low       = 0,
+    prio_high      = 1,
+    prio_high_done = 2
+} prio_check_mode;
+
+u32 DMA_priority() {
+    u32 flags = 0;
+    u16 IME = set_IME(0);
+
+    const u16* EWRAM_upper = (u16*)(EWRAM_START + 0x20000);
+    for (int channel = 0; channel < 3; channel++) {
+        // wait for next frame
+        do { } while ((*ptr_VCOUNT) != 227);
+        do { } while ((*ptr_VCOUNT) == 227);
+
+        // reset timer
+        *ptr_TM0CNT = 0x00800000;
+
+        // start 2 DMAs
+        // one in HBlank that is short
+        *ptr_DMASAD(channel) = ptr_TM0CNT;
+        *ptr_DMADAD(channel) = EWRAM_upper;
+        *ptr_DMACNT(channel) = ((DMAEnable | DMAStartHBlank | DMASrcFixed | DMADestIncrement) << 16) | 8;
+
+        // lower priority one immediately that is long
+        *ptr_DMASAD(channel + 1) = ptr_TM0CNT;
+        *ptr_DMADAD(channel + 1) = EWRAM_START;
+        *ptr_DMACNT(channel + 1) = ((DMAEnable | DMAStartImmediate | DMASrcFixed | DMADestIncrement) << 16) | 0x200;
+
+        // wait for long DMA to finish
+        do { } while ((*ptr_DMACNT(channel + 1)) * (DMAEnable << 16));
+        *ptr_DMACNT(channel) = 0;
+        *ptr_DMACNT(channel + 1) = 0;
+
+        // disable timer
+        *ptr_TM0CNT = 0;
+        u16* low_prio   = EWRAM_START;
+        u16* high_prio  = EWRAM_upper;
+        u32 timer_value = *(u16*)EWRAM_START;
+        prio_check_mode prio_check_mode = prio_low;
+        while (low_prio != (u16*)(EWRAM_START + 0x400)) {
+            if (prio_check_mode == prio_high) {
+                for (int j = 0; j < 8; j++) {
+                    if (*high_prio != timer_value) {
+                        flags |= 1 << channel;
+                        goto channel_done;
+                    }
+                    high_prio++;
+                    timer_value += 4;
+                }
+                prio_check_mode = prio_high_done;
+            }
+            else if (prio_check_mode == prio_low) {
+                if (*low_prio != timer_value) {
+                    prio_check_mode = 1;
+                }
+                else {
+                    low_prio++;
+                    timer_value += 4;
+                }
+            }
+            else if (prio_check_mode == prio_high_done) {
+                if (*low_prio != timer_value) {
+                    flags |= 1 << channel;
+                    break;
+                }
+                low_prio++;
+                timer_value += 4;
+            }
+        }
+        if (prio_check_mode != prio_high_done) {
+            flags |= 1 << channel;
+        }
+channel_done:;
+    }
+    set_IME(IME);
+    return flags;
+}
