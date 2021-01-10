@@ -25,7 +25,7 @@ The tests that are unused in the AGS ROM with md5 sum `9f74b2ad1d33e08e8a570ffe4
   - DISPLAY (this is the display sequence when all tests are passed)
   - PLAY_SOUND (this is also the sound that plays when all tests are passed)
   - CARTRIDGE_INTR
-  - EXECUTE_STOP_FUNCTION
+  - EXECUTE_STOP_FUNCTION (commented out because it likely freezes up a system, my emulator doesn't because I haven't implemented STOP)
   - EXECUTE_HALT_FUNCTION (freezes up (my) emulators)
 
 Extended SIO tests (instead of the DMA tests):
