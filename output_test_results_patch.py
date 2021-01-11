@@ -9,17 +9,18 @@ originally:
     str flags, [r7, #total_flags]
 injected:
     bl run_test
-    xor r1, r1
+    mov r1, #4
     str flags, [r1]
     str r7, [r7, #total_flags]
-where `flags` is r0 and #total_flags is some offset for a local variable
+where `flags` is r0 and #total_flags is some offset for a local variable.
+You could replace `str r7, [r7, #total_flags]` by `nop` to always pass AGS (simply change b"\xbf\x60" to b"\x00\x00")
 """
 
 with open("AGS.gba", "rb") as f:
     AGS = list(f.read())
 
 code = [
-    b"\x04\x21",  # movs r1, #4
+    b"\x04\x21",  # mov r1, #4
     b"\x08\x60",  # str r0, [r1]
     b"\xbf\x60",  # str r7, [r7, #8]
 ]

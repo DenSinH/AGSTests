@@ -8,8 +8,8 @@ with open("AGS.gba", "rb") as f:
     AGS = list(f.read())
 
 for i in range(4):
-#     AGS[i + 0x4c0] = 0  # uncomment to enable the advanced KEYINPUT test
-#     AGS[i + 0x4c6] = 0  # uncomment to enable test class 4 (COM)
+    # AGS[i + 0x4c0] = 0  # uncomment to enable the advanced KEYINPUT test
+    # AGS[i + 0x4c6] = 0  # uncomment to enable test class 4 (COM)
     # ALWAYS WIN!!
     # AGS[i + 0x4d2] = 0  # call to error screen
 
