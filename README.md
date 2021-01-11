@@ -4,13 +4,16 @@ This repository is meant to (semi-)disassemble the AGS Aging Cartridge ROM for t
 an effort to disassemble this ROM before, by Normmatt, found [here](https://github.com/Normmatt/ags_aging).
 
 I use some of the information (mainly the test entry points) that he found. I hope he is okay with this. This project
-is mainly aimed to be a source of information for emulator developers/GBA enthousiasts. 
+is mainly aimed to be a source of information for emulator developers/GBA enthousiasts. This is _not_ meant as an effort to completely and perfectly decompile the ROM.
+I did do some more research into the ROM and what happens, how the tests are called etc., but I found it too much effort and too little reward to completely decompile it.
+Because it is meant mostly as a source of information for people interested in these tests, I am not even sure if you can actually use this source code to compile into a GBA ROM, 
+you probably can if you add some stuff around it (you'll notice there isn't even a `main` function). 
 
 Especially [this file](https://github.com/Normmatt/ags_aging/blob/0aa5aceebc79a26acfd974dd06451bb11f191de0/src/sub_8000AD4.c#L191) 
 was of good use.
 
 <b>
-breaking on the function returns might not always work, since some functions are called from the stack, you
+Breaking on the function returns might not always work, since some functions are called from the stack, you
 can see this in my decompilation when a function is called with `call_from_stack()`.
 </b>
 
