@@ -3,6 +3,16 @@ Since I have done so much research into the AGS test, and I know that there are 
 something to patch your AGS ROM!
 
 AGS ROM md5: 9f74b2ad1d33e08e8a570ffe4564cbc3
+
+The ROM holds a copy of what it copies over to WRAM starting at 081421a0. At 081421a0 a bunch of structs of the form
+struct {
+    uint enabled;
+    uint executed;
+    uint result;
+    uint (*test)();
+    char* name;
+}
+start, holding the info for the tests. This patch basically edits the "test" field in these to point to the unused test functions.
 """
 with open("AGS.gba", "rb") as f:
     AGS = list(f.read())
