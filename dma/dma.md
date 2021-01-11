@@ -18,19 +18,20 @@ This test is the same for DMA0/1/2/3, except they use a different channel.
 The test tests out all different possible configurations and DMAs an array of 256 incrementing bytes to
 EWRAM. Then it compares it against a huge table of expected values (`expected.h`).
 The return flags are as follows:
-  - 0:  any test failed / any !HBlank test failed
-  - 1:  any HBlank test failed
-  - 2:  any SrcAddrControl == 0 (increment) test failed
-  - 3:  any SrcAddrControl == 1 (decrement) test failed
-  - 4:  any SrcAddrControl == 2 (fixed) test failed
-  - 5:  any DestAddrControl == 0 (increment) test failed
-  - 6:  any DestAddrControl == 1 (decrement) test failed
-  - 7:  any DestAddrControl == 2 (fixed) test failed
-  - 8:  any DestAddrControl == 3 (increment + reload) test failed
-  - 9:  any !WordSized test failed
-  - 10: any WordSized test failed
+  - 0x0:   any test failed / any non-HBlank test failed
+  - 0x1:   any HBlank test failed
+  - 0x2:   any SrcAddrControl == 0 (increment) test failed
+  - 0x4:   any SrcAddrControl == 1 (decrement) test failed
+  - 0x8:   any SrcAddrControl == 2 (fixed) test failed
+  - 0x10:  any DestAddrControl == 0 (increment) test failed
+  - 0x20:  any DestAddrControl == 1 (decrement) test failed
+  - 0x40:  any DestAddrControl == 2 (fixed) test failed
+  - 0x80:  any DestAddrControl == 3 (increment + reload) test failed
+  - 0x100: any non-WordSized test failed
+  - 0x200: any WordSized test failed
 
-I suspect bit 0 was not meant to have this "double purpose", but it does.
+I suspect bit 0 was not meant to have this "double purpose", but it does. You can see the table of
+expected values in `expected.h`. This table was quite long, and might not be so insightful, so I gave it it's own file.
 
 ## V BLANK START
 Sets the DMA start timing to VBlank and transfers VCount to EWRAM once. Checks if the value transferred is 160.
@@ -47,15 +48,15 @@ Only for DMA 3. Sets the DMA start timing for DMA3 to special and transfers VCon
 transferred are incrementing values from 2 to 161 (video DMA starts in line 2 and ends in 162) and then 68 zeros\
 (no DMA for the remaining lines).
 return flags:
-  - 1: DMA not ended in line 162
-  - 2: DMA did not transfer the right values
+  - 0x1: DMA not ended in line 162
+  - 0x2: DMA did not transfer the right values
 
 ## INTR FLAG
 Very similar to the timer/lcd intr flag tests. Basically, clears IF, enables 2 immediate DMAs, one with
 IRQ and one without and checks if the IF bit is set appropriately.
 return flags: 2 bits per channel. LSB = DMA0
-  - 1: IRQ not requested when it should have been
-  - 2: IRQ requested when it shouldn't have been
+  - 0x1: IRQ not requested when it should have been
+  - 0x2: IRQ requested when it shouldn't have been
 
 ## PRIORITY
 For each channel DMA 0, 1, 2: starts that channel in HBlank, repeating, and starts channel + 1 with a longer DMA
@@ -64,5 +65,5 @@ EWRAM. Not strict at all timing wise for when the DMAs take over.
 Fails if any timer value is incorrect or if the higher priority one does not
 fire while the lower priority is running.
 return flags: 1 for each DMA 0, 1 and 2. LSB = DMA0
-  - 1: any timer value is incorrect or if the higher priority DMA one does not
-       fire while the lower priority is running.
+  - 0x1: any timer value is incorrect OR the higher priority DMA does not
+         fire while the lower priority is running.

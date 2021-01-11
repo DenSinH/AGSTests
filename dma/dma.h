@@ -25,17 +25,17 @@ u32 check_DMA_test(void* dest, size_t len, void* expected, u32 check_size, u32* 
  * Main function for testing DMA address control. Tested for the DMA channel index passed as argument.
  * Return flags (bits):
  *
- * 0:  any test failed / any !HBlank test failed
- * 1:  any HBlank test failed
- * 2:  any SrcAddrControl == 0 (increment) test failed
- * 3:  any SrcAddrControl == 1 (decrement) test failed
- * 4:  any SrcAddrControl == 2 (fixed) test failed
- * 5:  any DestAddrControl == 0 (increment) test failed
- * 6:  any DestAddrControl == 1 (decrement) test failed
- * 7:  any DestAddrControl == 2 (fixed) test failed
- * 8:  any DestAddrControl == 3 (increment + reload) test failed
- * 9:  any !WordSized test failed
- * 10: any WordSized test failed
+ * 0x0:   any test failed / any !HBlank test failed
+ * 0x1:   any HBlank test failed
+ * 0x2:   any SrcAddrControl == 0 (increment) test failed
+ * 0x4:   any SrcAddrControl == 1 (decrement) test failed
+ * 0x8:   any SrcAddrControl == 2 (fixed) test failed
+ * 0x10:  any DestAddrControl == 0 (increment) test failed
+ * 0x20:  any DestAddrControl == 1 (decrement) test failed
+ * 0x40:  any DestAddrControl == 2 (fixed) test failed
+ * 0x80:  any DestAddrControl == 3 (increment + reload) test failed
+ * 0x100: any !WordSized test failed
+ * 0x200: any WordSized test failed
  * */
 u32 DMA_address_control(u16 channel);
 
