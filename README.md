@@ -48,7 +48,7 @@ I also just found it interesting to see what the tests did exactly. The code was
 If you run `output_test_results_patch.py` with `AGS.gba` in your working directory (with md5 sum `9f74b2ad1d33e08e8a570ffe4564cbc3`), it will patch the ROM so that it will output the result flags for each test to address `0x0004`. You can edit the first byte of the `code` list in that file to adjust the address. I chose 4 because `0` might occur
 randomly when games mess up and write to `null`, and this won't overflow your emulator/get flooded out that way. Might be very useful for emulator developers. 
 
-#### NOTE: doing this causes the ROM to always say you failed, even if you passed every test.
+<b>NOTE: doing this causes the ROM to always say "error occurred", even if you passed every test. I could also have made it so you always win, in the script it says how you can edit it to make it do that.</b>
 
 I chose to output it this way cause I was limited to 3 thumb mode instructions to output it. I could maybe have made it so it outputs to some other address, but I was fine with this.
 
