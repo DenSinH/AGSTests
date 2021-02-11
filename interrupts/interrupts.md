@@ -1,6 +1,6 @@
 ### INTERRUPTS
 
-AGS contains 7 lcd tests. The names for these tests are also in the ROM, and are:
+AGS contains 7 interrupt tests. The names for these tests are also in the ROM, and are:
   - V BLANK INTR (`vblank()`)
   - H BLANK INTR (`hblank()`)
   - V COUNT INTR (`vcount()`)
